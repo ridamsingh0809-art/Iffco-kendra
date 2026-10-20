@@ -1,0 +1,27 @@
+name: Build APK
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Arrange files
+        run: |
+          mkdir -p app/src/main/java/com/iffcokendra/app app/src/main/assets
+          mv app_build.gradle app/build.gradle
+          mv MainActivity.java app/src/main/java/com/iffcokendra/app/
+          mv AndroidManifest.xml app/src/main/
+          mv index.html app/src/main/assets/
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - run: gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IFFCO-KENDRA-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
