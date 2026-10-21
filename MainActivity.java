@@ -4,7 +4,11 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,6 +22,38 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         webView = new WebView(this);
         setContentView(webView);
+
+        // Keep the page below the status bar and above the navigation bar (edge-to-edge on Android 15+).
+        webView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                int top, bottom, left, right;
+                if (Build.VERSION.SDK_INT >= 30) {
+                    android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                    top = bars.top; bottom = bars.bottom; left = bars.left; right = bars.right;
+                } else {
+                    top = insets.getSystemWindowInsetTop();
+                    bottom = insets.getSystemWindowInsetBottom();
+                    left = insets.getSystemWindowInsetLeft();
+                    right = insets.getSystemWindowInsetRight();
+                }
+                v.setPadding(left, top, right, bottom);
+                return insets;
+            }
+        });
+
+        // Back gesture / button (works with predictive back on Android 13+).
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    new android.window.OnBackInvokedCallback() {
+                        @Override
+                        public void onBackInvoked() {
+                            if (webView != null && webView.canGoBack()) webView.goBack();
+                            else finish();
+                        }
+                    });
+        }
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
