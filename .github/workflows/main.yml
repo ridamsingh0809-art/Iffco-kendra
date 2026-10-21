@@ -16,15 +16,13 @@ jobs:
           mv index.html app/src/main/assets/
           mkdir -p app/src/main/res/mipmap-xxxhdpi
           mv ic_launcher.png app/src/main/res/mipmap-xxxhdpi/
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.7
-      - run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: IFFCO-KENDRA-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+        with
